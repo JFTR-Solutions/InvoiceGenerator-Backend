@@ -90,7 +90,6 @@ public class InvoiceService {
 
             // Extracting subtotal
             DocumentField subtotalField = fields.get("SubTotal");
-            System.out.println(subtotalField.getContent());
             if (subtotalField != null) {
                 String stringWithNumbersAndCommas = subtotalField.getContent().replaceAll("[^\\d,]", "");
                 String stringWithSingleDecimalPoint = stringWithNumbersAndCommas.replaceAll("(?<=\\d),(?=\\d{3})", "").replaceFirst(",", ".");
