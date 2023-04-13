@@ -86,6 +86,11 @@ public class FormRecognizer {
 
         // Extract file name
         String fileName = file.getOriginalFilename();
+        assert fileName != null;
+        int startIndex = fileName.indexOf("[PONR-") + 6;
+        int endIndex = fileName.indexOf("]",startIndex);
+        String referenceNumber = fileName.substring(startIndex, endIndex);
+
 
         try {
             byte[] fileBytes = file.getBytes();
@@ -93,7 +98,7 @@ public class FormRecognizer {
             SyncPoller<OperationResult, AnalyzeResult> invoicePoller =
                     client.beginAnalyzeDocument(invoiceModelId, BinaryData.fromBytes(fileBytes));
             AnalyzeResult invoiceResult = invoicePoller.getFinalResult();
-            InvoiceData invoiceData = invoiceService.extractInvoiceData(invoiceResult, fileName);
+            InvoiceData invoiceData = invoiceService.extractInvoiceData(invoiceResult, referenceNumber);
 
             return ResponseEntity.ok(invoiceData);
         } catch (IOException e) {
