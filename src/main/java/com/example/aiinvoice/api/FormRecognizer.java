@@ -9,6 +9,7 @@ import com.azure.core.util.BinaryData;
 import com.azure.core.util.polling.SyncPoller;
 import com.example.aiinvoice.entity.InvoiceData;
 import com.example.aiinvoice.entity.InvoiceItem;
+import com.example.aiinvoice.service.InvoiceExportService;
 import com.example.aiinvoice.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,15 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+@CrossOrigin
 @RestController
 public class FormRecognizer {
 
     @Autowired
     InvoiceService invoiceService;
+    InvoiceExportService invoiceExportService;
 
-    public FormRecognizer(InvoiceService invoiceService) {
+    public FormRecognizer(InvoiceService invoiceService, InvoiceExportService invoiceExportService) {
         this.invoiceService = invoiceService;
+        this.invoiceExportService =invoiceExportService;
     }
 
     //use your `key` and `endpoint` environment variables
@@ -47,7 +50,7 @@ public class FormRecognizer {
     }
 
     @PostMapping("/invoices")
-    public ResponseEntity<InvoiceData> extractInvoices(@RequestParam("files") List<MultipartFile> files) {
+    public ResponseEntity<InvoiceData> extractInvoices(@RequestParam("files") List<MultipartFile> files) throws IOException {
         String modelId = "prebuilt-invoice";
         InvoiceData combinedInvoiceData = new InvoiceData();
 
@@ -71,6 +74,7 @@ public class FormRecognizer {
                 e.printStackTrace();
             }
         }
+        invoiceExportService.createInvoiceExcel(combinedInvoiceData);
         return ResponseEntity.ok(combinedInvoiceData);
     }
 
@@ -99,4 +103,3 @@ public class FormRecognizer {
     }
 
 }
-
