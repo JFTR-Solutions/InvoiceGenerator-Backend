@@ -12,8 +12,6 @@ import java.util.List;
 @Setter
 public class InvoiceData {
 
-//    String invoiceNumber;
-//    String customerName;
     List<InvoiceItem> invoiceItems;
     double subTotal;
 
@@ -21,7 +19,7 @@ public class InvoiceData {
        invoiceItems = new ArrayList<>();
     }
 
-    public void addInvoiceItem(String description, double quantity, double price) {
+    public void addInvoiceItem(String referenceNumber, String description, double quantity, double price) {
         if (invoiceItems == null) {
             invoiceItems = new ArrayList<>();
         }
@@ -34,7 +32,7 @@ public class InvoiceData {
         }
 
         // If the item is not already present in the list, add it
-        invoiceItems.add(new InvoiceItem(description, quantity, price));
+        invoiceItems.add(new InvoiceItem(referenceNumber, description, quantity, price));
     }
 
 }

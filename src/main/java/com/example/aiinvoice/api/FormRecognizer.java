@@ -1,7 +1,5 @@
 package com.example.aiinvoice.api;
 
-import com.azure.ai.formrecognizer.*;
-
 import com.azure.ai.formrecognizer.documentanalysis.models.*;
 import com.azure.ai.formrecognizer.documentanalysis.DocumentAnalysisClient;
 import com.azure.ai.formrecognizer.documentanalysis.DocumentAnalysisClientBuilder;
@@ -11,23 +9,16 @@ import com.azure.core.util.BinaryData;
 import com.azure.core.util.polling.SyncPoller;
 import com.example.aiinvoice.entity.InvoiceData;
 import com.example.aiinvoice.entity.InvoiceItem;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Arrays;
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @RestController
 public class FormRecognizer {
@@ -53,26 +44,35 @@ public class FormRecognizer {
         for (MultipartFile file : files) {
             try {
                 byte[] fileBytes = file.getBytes();
-                SyncPoller<OperationResult, AnalyzeResult> analyzeW2Poller =
+                // Extract reference number from file name
+                String fileName = file.getOriginalFilename();
+                Pattern pattern = Pattern.compile("(\\d{3})-(\\w)-(\\d{6})");
+                Matcher matcher = pattern.matcher(fileName);
+                String referenceNumber = null;
+                if (matcher.find()) {
+                    referenceNumber = matcher.group(0);
+                }
+                // Analyze invoice
+                SyncPoller<OperationResult, AnalyzeResult> analyzeInvoicePoller =
                         client.beginAnalyzeDocument(modelId, BinaryData.fromBytes(fileBytes));
-
-                AnalyzeResult analyzeTaxResult = analyzeW2Poller.getFinalResult();
-                InvoiceData invoiceData = extractInvoiceData(analyzeTaxResult);
-                combinedInvoiceData = mergeInvoiceData(combinedInvoiceData, invoiceData);
+                AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
+                InvoiceData invoiceData = extractInvoiceData(analyzeTaxResult, referenceNumber);
+                combinedInvoiceData = mergeInvoicesData(combinedInvoiceData, invoiceData);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
         return ResponseEntity.ok(combinedInvoiceData);
     }
 
-    private InvoiceData mergeInvoiceData(InvoiceData invoiceData1, InvoiceData invoiceData2) {
+    public InvoiceData mergeInvoicesData(InvoiceData invoiceData1, InvoiceData invoiceData2) {
         InvoiceData mergedInvoiceData = new InvoiceData();
 
         // Add invoice items from both invoices
         mergedInvoiceData.getInvoiceItems().addAll(invoiceData1.getInvoiceItems());
         mergedInvoiceData.getInvoiceItems().addAll(invoiceData2.getInvoiceItems());
+
+        // Set your reference for each invoice item
 
         double combinedSubtotal = 0;
         for (InvoiceItem item : mergedInvoiceData.getInvoiceItems()) {
@@ -84,21 +84,34 @@ public class FormRecognizer {
     }
 
     @PostMapping("/invoice")
-    public ResponseEntity<InvoiceData> extractInvoice(@RequestBody byte[] fileBytes) {
-        String modelId = "prebuilt-invoice";
+    public ResponseEntity<InvoiceData> extractInvoice(@RequestParam("file") MultipartFile file) {
+        String invoiceModelId = "prebuilt-invoice";
 
-        SyncPoller<OperationResult, AnalyzeResult> analyzeW2Poller =
-                client.beginAnalyzeDocument(modelId, BinaryData.fromBytes(fileBytes));
+        // Extract file name
+        String fileName = file.getOriginalFilename();
 
-        AnalyzeResult analyzeTaxResult = analyzeW2Poller.getFinalResult();
-        InvoiceData invoiceData = extractInvoiceData(analyzeTaxResult);
-        return ResponseEntity.ok(invoiceData);
+        try {
+            byte[] fileBytes = file.getBytes();
+            // Analyze invoice using the invoice model
+            SyncPoller<OperationResult, AnalyzeResult> invoicePoller =
+                    client.beginAnalyzeDocument(invoiceModelId, BinaryData.fromBytes(fileBytes));
+            AnalyzeResult invoiceResult = invoicePoller.getFinalResult();
+            InvoiceData invoiceData = extractInvoiceData(invoiceResult, fileName);
 
+            return ResponseEntity.ok(invoiceData);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    private InvoiceData extractInvoiceData(AnalyzeResult analyzeResult) {
+
+
+
+
+
+    public InvoiceData extractInvoiceData(AnalyzeResult analyzeResult, String referenceNumber) {
         InvoiceData invoiceData = new InvoiceData();
-        Pattern pattern = Pattern.compile("\\b\\d{3}-[A-Z]-\\d{6}\\b");
 
         List<AnalyzedDocument> analyzedDocuments = analyzeResult.getDocuments();
         if (analyzedDocuments == null) {
@@ -107,27 +120,6 @@ public class FormRecognizer {
 
         for (AnalyzedDocument analyzedDocument : analyzedDocuments) {
             Map<String, DocumentField> fields = analyzedDocument.getFields();
-
-            //TODO: Extracting your reference
-/*            System.out.println("Field keys: " + fields.keySet());
-            // Extracting your reference
-            DocumentField yourReferenceField = fields.get("Your reference");
-            if (yourReferenceField != null) {
-                String content = yourReferenceField.getContent();
-                Matcher matcher = pattern.matcher(content);
-                if (matcher.find()) {
-                    String yourReference = matcher.group();
-                    invoiceData.setInvoiceNumber(yourReference);
-                }
-            }*/
-
-/*            // Extracting customer name
-            DocumentField customerNameField = fields.get("CustomerName");
-            if (customerNameField != null) {
-                String stringWithLettersAndSpacesOnly = customerNameField.getContent().replaceAll("[^\\p{L}\\s]", "");
-                invoiceData.setCustomerName(stringWithLettersAndSpacesOnly);
-            }*/
-
 
             // Extracting items
             DocumentField invoiceItemsField = fields.get("Items");
@@ -141,6 +133,7 @@ public class FormRecognizer {
                         double price = 0.0;
                         double quantity = 0.0;
 
+                        // Extracting description
                         DocumentField descriptionField = itemData.get("Description");
                         if (descriptionField != null) {
                             description = descriptionField.getContent();
@@ -157,7 +150,7 @@ public class FormRecognizer {
                                 quantity = Double.parseDouble(stringWithNumbersAndDotOnly);
                             }
 
-// Extracting price
+                            // Extracting price
                             DocumentField priceField = itemData.get("UnitPrice");
                             if (priceField != null) {
                                 String stringWithNumbersAndCommas = priceField.getContent().replaceAll("[^\\d,\\.]", "");
@@ -165,50 +158,22 @@ public class FormRecognizer {
                                 price = Double.parseDouble(stringWithSingleDecimalPoint);
                             }
 
-
-                            invoiceData.addInvoiceItem(description, quantity, price);
+                            invoiceData.addInvoiceItem(referenceNumber, description, quantity, price);
                         }
                     }
                 }
             }
 
-// Extracting subtotal
+            // Extracting subtotal
             DocumentField subtotalField = fields.get("SubTotal");
             if (subtotalField != null) {
                 String stringWithNumbersAndCommas = subtotalField.getContent().replaceAll("[^\\d,]", "");
                 String stringWithSingleDecimalPoint = stringWithNumbersAndCommas.replaceAll("(?<=\\d),(?=\\d{3})", "").replaceFirst(",", ".");
                 invoiceData.setSubTotal(Double.parseDouble(stringWithSingleDecimalPoint));
             }
-
         }
+
         return invoiceData;
     }
 }
 
-
-
-/*    public static void main(final String[] args) {
-
-        FormRecognizer formRecognizer = new FormRecognizer();
-
-        // sample document
-        String w2FilePath = "path/to/your/w2.png";
-
-        byte[] fileBytes;
-        try {
-            fileBytes = Files.readAllBytes(Paths.get(w2FilePath));
-        } catch (IOException e) {
-            System.err.println("Error reading the file: " + e.getMessage());
-            return;
-        }
-
-        ResponseEntity<InvoiceData> response = formRecognizer.extractW2Data(fileBytes);
-
-        if (response.getStatusCode().is2xxSuccessful()) {
-            InvoiceData analyzeTaxResult = response.getBody();
-            // Process the AnalyzeResult object as before
-            // ...
-        } else {
-            System.err.println("Failed to analyze the document.");
-        }
-    }*/
