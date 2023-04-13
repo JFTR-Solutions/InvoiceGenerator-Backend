@@ -46,12 +46,11 @@ public class FormRecognizer {
                 byte[] fileBytes = file.getBytes();
                 // Extract reference number from file name
                 String fileName = file.getOriginalFilename();
-                Pattern pattern = Pattern.compile("(\\d{3})-(\\w)-(\\d{6})");
-                Matcher matcher = pattern.matcher(fileName);
-                String referenceNumber = null;
-                if (matcher.find()) {
-                    referenceNumber = matcher.group(0);
-                }
+                assert fileName != null;
+                int startIndex = fileName.indexOf("[PONR-") + 6;
+                int endIndex = fileName.indexOf("]",startIndex);
+                String referenceNumber = fileName.substring(startIndex, endIndex);
+
                 // Analyze invoice
                 SyncPoller<OperationResult, AnalyzeResult> analyzeInvoicePoller =
                         client.beginAnalyzeDocument(modelId, BinaryData.fromBytes(fileBytes));
