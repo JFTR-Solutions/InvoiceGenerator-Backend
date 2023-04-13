@@ -28,12 +28,7 @@ public class FormRecognizer {
 
     @Autowired
     InvoiceService invoiceService;
-    InvoiceExportService invoiceExportService;
 
-    public FormRecognizer(InvoiceService invoiceService, InvoiceExportService invoiceExportService) {
-        this.invoiceService = invoiceService;
-        this.invoiceExportService =invoiceExportService;
-    }
 
     //use your `key` and `endpoint` environment variables
     private static final String key = System.getenv("FR_KEY");
@@ -74,8 +69,38 @@ public class FormRecognizer {
                 e.printStackTrace();
             }
         }
+        InvoiceExportService invoiceExportService = new InvoiceExportService();
         invoiceExportService.createInvoiceExcel(combinedInvoiceData);
         return ResponseEntity.ok(combinedInvoiceData);
+    }
+
+    @PostMapping("/invoices/byte")
+    public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files) throws IOException {
+        String modelId = "prebuilt-invoice";
+        InvoiceData combinedInvoiceData = new InvoiceData();
+
+        for (MultipartFile file : files) {
+            try {
+                byte[] fileBytes = file.getBytes();
+                // Extract reference number from file name
+                String fileName = file.getOriginalFilename();
+                assert fileName != null;
+                int startIndex = fileName.indexOf("[PONR-") + 6;
+                int endIndex = fileName.indexOf("]",startIndex);
+                String referenceNumber = fileName.substring(startIndex, endIndex);
+
+                // Analyze invoice
+                SyncPoller<OperationResult, AnalyzeResult> analyzeInvoicePoller =
+                        client.beginAnalyzeDocument(modelId, BinaryData.fromBytes(fileBytes));
+                AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
+                InvoiceData invoiceData = invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber);
+                combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        InvoiceExportService invoiceExportService = new InvoiceExportService();
+        return ResponseEntity.ok(invoiceExportService.createInvoiceExcelByte(combinedInvoiceData));
     }
 
 
