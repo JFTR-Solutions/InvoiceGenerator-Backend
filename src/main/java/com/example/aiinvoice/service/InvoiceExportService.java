@@ -73,23 +73,37 @@ public class InvoiceExportService {
               Sheet sheet = workbook.getSheetAt(0);
 
             // Set the invoice data in the sheet
-            int rowIndex = 14;
+            int rowIndex = 17;
+            int quantityIndex = 0;
             for (InvoiceItem invoiceItem : invoiceData.getInvoiceItems()) {
-                Row row = sheet.createRow(rowIndex++);
+                Row row = sheet.createRow(rowIndex);
                 Cell descriptionCell = row.createCell(2);
                 descriptionCell.setCellValue(invoiceItem.getDescription());
                 Cell quantityCell = row.createCell(0);
                 quantityCell.setCellValue(invoiceItem.getQuantity());
+                quantityIndex += invoiceItem.getQuantity();
                 Cell priceCell = row.createCell(4);
                 priceCell.setCellValue(invoiceItem.getPrice());
-                Cell referenceNumberCell = row.createCell(4);
+                Cell referenceNumberCell = row.createCell(7);
                 referenceNumberCell.setCellValue(invoiceItem.getReferenceNumber());
+                rowIndex++;
             }
+            CellStyle styleLine = workbook.createCellStyle();
+            styleLine.setBorderTop(BorderStyle.MEDIUM);
+
+            // Create a subtotal row
+            Font boldFont = workbook.createFont();
+            boldFont.setBold(true);
+            CellStyle style = workbook.createCellStyle();
+            style.setFont(boldFont);
             rowIndex++;
-            // Set the subtotal value
-            Row subTotalRow = sheet.getRow(rowIndex);
-            Cell subTotalCell = subTotalRow.getCell(4);
+            Row subTotalRow = sheet.createRow(rowIndex);
+            Cell subQuantityCell = subTotalRow.createCell(0);
+            subQuantityCell.setCellValue(quantityIndex);
+            Cell subTotalCell = subTotalRow.createCell(4);
             subTotalCell.setCellValue(invoiceData.getSubTotal());
+            subTotalRow.setRowStyle(styleLine);
+            subTotalRow.setRowStyle(style);
 
             // Auto-size the columns
             for (int i = 0; i < 7; i++) {
@@ -108,9 +122,6 @@ public class InvoiceExportService {
 
             return byteArray;
         }
-
-
-
 
 
 }
