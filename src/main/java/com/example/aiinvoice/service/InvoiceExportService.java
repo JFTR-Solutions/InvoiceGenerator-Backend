@@ -72,7 +72,7 @@ public class InvoiceExportService {
             // Get the "Invoice" sheet
               Sheet sheet = workbook.getSheetAt(0);
 
-            // Set the invoice data in the sheet
+            //Set invoice data in table
             int rowIndex = 17;
             int quantityIndex = 0;
             for (InvoiceItem invoiceItem : invoiceData.getInvoiceItems()) {
@@ -86,12 +86,19 @@ public class InvoiceExportService {
                 priceCell.setCellValue(invoiceItem.getPrice());
                 Cell referenceNumberCell = row.createCell(7);
                 referenceNumberCell.setCellValue(invoiceItem.getReferenceNumber());
+
+
                 rowIndex++;
             }
             CellStyle styleLine = workbook.createCellStyle();
-            styleLine.setBorderTop(BorderStyle.MEDIUM);
+            styleLine.setBorderBottom(BorderStyle.MEDIUM);
+            Row tableFooter = sheet.createRow(rowIndex);
+             for (int i = 0; i < 8; i++) {
+                Cell cell = tableFooter.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                cell.setCellStyle(styleLine);
+             }
 
-            // Create a subtotal row
+            //Subtotal row
             Font boldFont = workbook.createFont();
             boldFont.setBold(true);
             CellStyle style = workbook.createCellStyle();
@@ -99,11 +106,12 @@ public class InvoiceExportService {
             rowIndex++;
             Row subTotalRow = sheet.createRow(rowIndex);
             Cell subQuantityCell = subTotalRow.createCell(0);
+            subQuantityCell.setCellStyle(style);
             subQuantityCell.setCellValue(quantityIndex);
             Cell subTotalCell = subTotalRow.createCell(4);
+            subTotalCell.setCellStyle(style);
             subTotalCell.setCellValue(invoiceData.getSubTotal());
-            subTotalRow.setRowStyle(styleLine);
-            subTotalRow.setRowStyle(style);
+
 
             // Auto-size the columns
             for (int i = 0; i < 7; i++) {
