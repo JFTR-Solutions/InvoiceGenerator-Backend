@@ -100,7 +100,7 @@ public class FormRecognizer {
             }
         }
         InvoiceExportService invoiceExportService = new InvoiceExportService();
-        return ResponseEntity.ok(invoiceExportService.createInvoiceExcelByte(combinedInvoiceData));
+        return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(combinedInvoiceData));
     }
 
 
