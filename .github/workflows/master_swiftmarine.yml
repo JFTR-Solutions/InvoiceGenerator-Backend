@@ -49,5 +49,5 @@ jobs:
         with:
           app-name: 'SwiftMarine'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_ED4008E714C54494A7A44B9DD4D5D41E }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_73CF9E3F632C4F6A8373136B5C4B9A43 }}
           package: '*.jar'
