@@ -45,7 +45,7 @@ public class FormRecognizer {
     }
 
     @PostMapping("/invoices")
-    public ResponseEntity<InvoiceData> extractInvoices(@RequestParam("files") List<MultipartFile> files) throws IOException {
+    public ResponseEntity<InvoiceData> extractInvoices(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
         String modelId = "prebuilt-invoice";
         InvoiceData combinedInvoiceData = new InvoiceData();
 
@@ -70,12 +70,12 @@ public class FormRecognizer {
             }
         }
         InvoiceExportService invoiceExportService = new InvoiceExportService();
-        invoiceExportService.createInvoiceExcel(combinedInvoiceData);
+        invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber);
         return ResponseEntity.ok(combinedInvoiceData);
     }
 
     @PostMapping("/invoices/byte")
-    public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files) throws IOException {
+    public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
         String modelId = "prebuilt-invoice";
         InvoiceData combinedInvoiceData = new InvoiceData();
 
@@ -100,7 +100,7 @@ public class FormRecognizer {
             }
         }
         InvoiceExportService invoiceExportService = new InvoiceExportService();
-        return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(combinedInvoiceData));
+        return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber));
     }
 
 
