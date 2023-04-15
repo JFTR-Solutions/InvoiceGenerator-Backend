@@ -1,4 +1,4 @@
-package com.example.funskatebackend.security.error;
+package com.example.security.error;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

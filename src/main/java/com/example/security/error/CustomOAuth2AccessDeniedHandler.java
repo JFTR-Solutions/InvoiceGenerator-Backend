@@ -1,4 +1,4 @@
-package com.example.funskatebackend.security.error;
+package com.example.security.error;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,7 +45,7 @@ public class CustomOAuth2AccessDeniedHandler implements AccessDeniedHandler {
     errorResponse.put("path", request.getRequestURI());
 
     //Refactor
-    String wwwAuthenticate = CustomOAuth2AuthenticationEntryPoint.computeWWWAuthenticateHeaderValue(parameters);
+    String wwwAuthenticate = com.example.security.error.CustomOAuth2AuthenticationEntryPoint.computeWWWAuthenticateHeaderValue(parameters);
     response.addHeader("WWW-Authenticate", wwwAuthenticate);
     response.setStatus(HttpStatus.FORBIDDEN.value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);

@@ -1,8 +1,9 @@
 package com.example.security;
 
 
-import com.example.funskatebackend.security.error.CustomOAuth2AccessDeniedHandler;
-import com.example.funskatebackend.security.error.CustomOAuth2AuthenticationEntryPoint;
+
+import com.example.security.error.CustomOAuth2AccessDeniedHandler;
+import com.example.security.error.CustomOAuth2AuthenticationEntryPoint;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.source.JWKSource;
