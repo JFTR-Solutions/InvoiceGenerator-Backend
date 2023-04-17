@@ -1,9 +1,6 @@
 package com.example.aiinvoice.service;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 
 import com.example.aiinvoice.entity.InvoiceData;
@@ -19,10 +16,16 @@ public class InvoiceExportService {
     public byte[] createInvoiceExcel(InvoiceData invoiceData, String dispNr) throws IOException {
         // Load the template file
         System.out.println("Entering createInvoiceExcel method");
-
         try {
-            String templatePath = "swift_invoice_template3.xlsx";
-            FileInputStream inputStream = new FileInputStream(templatePath);
+            System.out.println("Entering createInvoiceExcel method");
+
+            // Use class loader to get the file from resources
+            String templatePath = "src/main/resources/swift_invoice_template3.xlsx";
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream(templatePath);
+            if (inputStream == null) {
+                throw new RuntimeException("Cannot find the file: " + templatePath);
+            }
+
             Workbook workbook = new XSSFWorkbook(inputStream);
 
 
