@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 @CrossOrigin
 @RestController
 public class FormRecognizer {
@@ -56,7 +57,7 @@ public class FormRecognizer {
                 String fileName = file.getOriginalFilename();
                 assert fileName != null;
                 int startIndex = fileName.indexOf("[PONR-") + 6;
-                int endIndex = fileName.indexOf("]",startIndex);
+                int endIndex = fileName.indexOf("]", startIndex);
                 String referenceNumber = fileName.substring(startIndex, endIndex);
 
                 // Analyze invoice
@@ -79,6 +80,7 @@ public class FormRecognizer {
         System.out.println("InvoicesToByte endpoint called");
         String modelId = "prebuilt-invoice";
         InvoiceData combinedInvoiceData = new InvoiceData();
+        InvoiceExportService invoiceExportService = new InvoiceExportService();
 
         for (MultipartFile file : files) {
             try {
@@ -89,7 +91,7 @@ public class FormRecognizer {
                 String fileName = file.getOriginalFilename();
                 assert fileName != null;
                 int startIndex = fileName.indexOf("[PONR-") + 6;
-                int endIndex = fileName.indexOf("]",startIndex);
+                int endIndex = fileName.indexOf("]", startIndex);
                 String referenceNumber = fileName.substring(startIndex, endIndex);
 
                 System.out.println("Reference number: " + referenceNumber);
@@ -100,19 +102,18 @@ public class FormRecognizer {
                 AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
 
                 System.out.println("Analyze result: " + analyzeTaxResult);
-
                 InvoiceData invoiceData = invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber);
                 combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
             } catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.out.println("xxxx" + e.getMessage());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
             }
         }
         System.out.println("Generating Excel file");
-        InvoiceExportService invoiceExportService = new InvoiceExportService();
-        return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber));
+        byte[] byteArr = invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber);
+        System.out.println("Excel file generated");
+        return ResponseEntity.ok(byteArr);
     }
-
 
 
     @PostMapping("/invoice")
@@ -123,7 +124,7 @@ public class FormRecognizer {
         String fileName = file.getOriginalFilename();
         assert fileName != null;
         int startIndex = fileName.indexOf("[PONR-") + 6;
-        int endIndex = fileName.indexOf("]",startIndex);
+        int endIndex = fileName.indexOf("]", startIndex);
         String referenceNumber = fileName.substring(startIndex, endIndex);
 
 
