@@ -76,11 +76,14 @@ public class FormRecognizer {
 
     @PostMapping("/invoices/byte")
     public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
+        System.out.println("InvoicesToByte endpoint called");
         String modelId = "prebuilt-invoice";
         InvoiceData combinedInvoiceData = new InvoiceData();
 
         for (MultipartFile file : files) {
             try {
+                System.out.println("Processing file: " + file.getOriginalFilename());
+
                 byte[] fileBytes = file.getBytes();
                 // Extract reference number from file name
                 String fileName = file.getOriginalFilename();
@@ -89,10 +92,15 @@ public class FormRecognizer {
                 int endIndex = fileName.indexOf("]",startIndex);
                 String referenceNumber = fileName.substring(startIndex, endIndex);
 
+                System.out.println("Reference number: " + referenceNumber);
+
                 // Analyze invoice
                 SyncPoller<OperationResult, AnalyzeResult> analyzeInvoicePoller =
                         client.beginAnalyzeDocument(modelId, BinaryData.fromBytes(fileBytes));
                 AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
+
+                System.out.println("Analyze result: " + analyzeTaxResult);
+
                 InvoiceData invoiceData = invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber);
                 combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
             } catch (Exception e) {
@@ -100,6 +108,7 @@ public class FormRecognizer {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
             }
         }
+        System.out.println("Generating Excel file");
         InvoiceExportService invoiceExportService = new InvoiceExportService();
         return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber));
     }
