@@ -1,18 +1,14 @@
 package com.example.aiinvoice.service;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.time.LocalDate;
 
 import com.example.aiinvoice.entity.InvoiceData;
 import com.example.aiinvoice.entity.InvoiceItem;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +74,7 @@ public class InvoiceExportService {
 
         // Get the "Invoice" sheet
         Sheet sheet = workbook.getSheetAt(0);
-// Merge cells between C8-E13
+        // Merge cells between C8-E13
 
         CellStyle wrapTextStyle = workbook.createCellStyle();
         wrapTextStyle.setWrapText(true);
@@ -88,6 +84,12 @@ public class InvoiceExportService {
         Row dispatchNumberRow = sheet.getRow(2);
         Cell dispatchNumberCell = dispatchNumberRow.createCell(5);
         dispatchNumberCell.setCellValue("Our ref: " + dispNr);
+
+        Row dateRow = sheet.getRow(1);
+        Cell dateCell = dateRow.createCell(5);
+        LocalDate date = LocalDate.now();
+        String month = date.getMonth().toString().substring(0, 1) + date.getMonth().toString().substring(1).toLowerCase();
+        dateCell.setCellValue("Date: " + month + " " + dayOfMonthSuffix(date.getDayOfMonth()) + ", " + date.getYear());
 
 
         //Set invoice data in table
@@ -176,6 +178,23 @@ public class InvoiceExportService {
         byteArrayOutputStream.close();
 
         return byteArray;
+    }
+
+
+    private String dayOfMonthSuffix(int day) {
+        if (day >= 11 && day <= 13) {
+            return day + "th";
+        }
+        switch (day % 10) {
+            case 1:
+                return day + "st";
+            case 2:
+                return day + "nd";
+            case 3:
+                return day + "rd";
+            default:
+                return day + "th";
+        }
     }
 
 
