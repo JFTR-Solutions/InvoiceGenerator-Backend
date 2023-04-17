@@ -97,6 +97,7 @@ public class FormRecognizer {
                 combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
             }
         }
         InvoiceExportService invoiceExportService = new InvoiceExportService();
