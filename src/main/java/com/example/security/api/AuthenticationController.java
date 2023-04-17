@@ -82,7 +82,7 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/validateToken")
+    @PostMapping("/validatetoken")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authorizationHeader) {
         try {
             // Extract the token from the Authorization header
