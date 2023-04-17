@@ -20,7 +20,7 @@ public class InvoiceExportService {
             System.out.println("Entering createInvoiceExcel method");
 
             // Use class loader to get the file from resources
-            String templatePath = "src/main/resources/swift_invoice_template3.xlsx";
+            String templatePath = "templates/swift_invoice_template3.xlsx";
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream(templatePath);
             if (inputStream == null) {
                 throw new RuntimeException("Cannot find the file: " + templatePath);
