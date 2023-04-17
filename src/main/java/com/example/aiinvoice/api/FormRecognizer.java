@@ -65,8 +65,8 @@ public class FormRecognizer {
                 AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
                 InvoiceData invoiceData = invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber);
                 combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         }
         InvoiceExportService invoiceExportService = new InvoiceExportService();
