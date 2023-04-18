@@ -16,24 +16,6 @@ import java.util.Map;
 public class InvoiceService {
 
 
-    public InvoiceData mergeInvoicesData(InvoiceData invoiceData1, InvoiceData invoiceData2) {
-        InvoiceData mergedInvoiceData = new InvoiceData();
-
-        // Add invoice items from both invoices
-        mergedInvoiceData.getInvoiceItems().addAll(invoiceData1.getInvoiceItems());
-        mergedInvoiceData.getInvoiceItems().addAll(invoiceData2.getInvoiceItems());
-
-        // Set your reference for each invoice item
-
-        double combinedSubtotal = 0;
-        for (InvoiceItem item : mergedInvoiceData.getInvoiceItems()) {
-            combinedSubtotal += item.getPrice() * item.getQuantity();
-        }
-        mergedInvoiceData.setSubTotal(Math.round(combinedSubtotal * 100.0) / 100.0);
-
-        return mergedInvoiceData;
-    }
-
     public List<InvoiceItem> extractInvoiceData(AnalyzeResult analyzeResult, String referenceNumber) {
         List<InvoiceItem> invoiceItemList = new ArrayList<>();
 
