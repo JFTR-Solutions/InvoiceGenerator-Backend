@@ -8,6 +8,7 @@ import com.azure.core.credential.AzureKeyCredential;
 import com.azure.core.util.BinaryData;
 import com.azure.core.util.polling.SyncPoller;
 import com.example.aiinvoice.entity.InvoiceItem;
+import com.example.aiinvoice.service.APIService;
 import com.example.aiinvoice.service.InvoiceExportService;
 import com.example.aiinvoice.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +25,11 @@ import java.util.List;
 @RestController
 public class FormRecognizer {
 
+
     @Autowired
     InvoiceService invoiceService;
-
-
+    @Autowired
+    APIService apiService;
     //use your `key` and `endpoint` environment variables
     private static final String key = System.getenv("FR_KEY");
     private static final String endpoint = System.getenv("FR_ENDPOINT");
@@ -44,7 +46,7 @@ public class FormRecognizer {
 
     @PostMapping("/invoices")
     public ResponseEntity<List<InvoiceItem>> extractInvoices(@RequestParam("files") List<MultipartFile> files) throws IOException {
-        String modelId = "prebuilt-invoice";
+       /* String modelId = "prebuilt-invoice";
         List<InvoiceItem> combinedInvoiceList = new ArrayList<>();
 
 
@@ -67,8 +69,8 @@ public class FormRecognizer {
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-        }
-        return ResponseEntity.ok(combinedInvoiceList);
+        }*/
+        return ResponseEntity.ok(apiService.processInvoices(files));
     }
 
     @PostMapping("/invoices/byte")
