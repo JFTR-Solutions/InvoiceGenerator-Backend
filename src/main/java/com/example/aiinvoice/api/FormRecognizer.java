@@ -35,17 +35,7 @@ public class FormRecognizer {
 
     @PostMapping("/invoices/byte")
     public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
-        byte[] byteArr = invoiceExportService.createInvoiceExcel(apiService.processInvoices(files), dispatchNumber);
-
-        // Set the desired file name
-        String fileName = "invoice_" + dispatchNumber + ".xlsx";
-
-        // Set the headers, including the "Content-Disposition" header with the desired file name
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(fileName).build());
-
-        return ResponseEntity.ok().headers(headers).body(byteArr);
+        return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(apiService.processInvoices(files), dispatchNumber));
     }
 
 
