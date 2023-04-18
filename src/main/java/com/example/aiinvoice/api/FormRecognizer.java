@@ -5,6 +5,9 @@ import com.example.aiinvoice.service.APIService;
 import com.example.aiinvoice.service.InvoiceExportService;
 import com.example.aiinvoice.service.InvoiceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +35,17 @@ public class FormRecognizer {
 
     @PostMapping("/invoices/byte")
     public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
-        return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(apiService.processInvoices(files), dispatchNumber));
+        byte[] byteArr = invoiceExportService.createInvoiceExcel(apiService.processInvoices(files), dispatchNumber);
+
+        // Set the desired file name
+        String fileName = "invoice_" + dispatchNumber + ".xlsx";
+
+        // Set the headers, including the "Content-Disposition" header with the desired file name
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDisposition(ContentDisposition.builder("attachment").filename(fileName).build());
+
+        return ResponseEntity.ok().headers(headers).body(byteArr);
     }
 
 }
