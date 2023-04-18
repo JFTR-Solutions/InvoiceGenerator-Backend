@@ -49,7 +49,13 @@ public class APIService {
                 assert fileName != null;
                 int startIndex = fileName.indexOf("[PONR-") + 6;
                 int endIndex = fileName.indexOf("]", startIndex);
-                String referenceNumber = fileName.substring(startIndex, endIndex);
+                String referenceNumber;
+                if (endIndex == -1) {
+                    referenceNumber = fileName;
+                }
+                else {
+                    referenceNumber = fileName.substring(startIndex, endIndex);
+                }
 
                 // Analyze invoice
                 SyncPoller<OperationResult, AnalyzeResult> analyzeInvoicePoller =
