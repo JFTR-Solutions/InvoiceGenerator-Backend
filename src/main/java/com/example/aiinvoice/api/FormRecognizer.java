@@ -35,4 +35,11 @@ public class FormRecognizer {
         return ResponseEntity.ok(invoiceExportService.createInvoiceExcel(apiService.processInvoices(files), dispatchNumber));
     }
 
+
+    @PostMapping("/invoices/test")
+    public ResponseEntity<String> invoiceTest(@RequestParam("files") List<MultipartFile> files) throws IOException {
+        String testdata = "[{\"referenceNumber\":\"240-S-218544\",\"description\":\"igs-gg\",\"quantity\":3,\"price\":175},{\"referenceNumber\":\"240-S-218544\",\"description\":\"igs-gg\",\"quantity\":1,\"price\":1248},{\"referenceNumber\":\"240-S-221321\",\"description\":\"bm015 base module for pd527 valve cont hs: 85423111 coo: denmark\",\"quantity\":3,\"price\":124}]";
+        return ResponseEntity.ok(testdata);
+    }
+
 }
