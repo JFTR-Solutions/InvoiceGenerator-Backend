@@ -7,7 +7,6 @@ import com.azure.ai.formrecognizer.documentanalysis.DocumentAnalysisClientBuilde
 import com.azure.core.credential.AzureKeyCredential;
 import com.azure.core.util.BinaryData;
 import com.azure.core.util.polling.SyncPoller;
-import com.example.aiinvoice.entity.InvoiceData;
 import com.example.aiinvoice.entity.InvoiceItem;
 import com.example.aiinvoice.service.InvoiceExportService;
 import com.example.aiinvoice.service.InvoiceService;
@@ -18,10 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @CrossOrigin
 @RestController
@@ -46,9 +43,10 @@ public class FormRecognizer {
     }
 
     @PostMapping("/invoices")
-    public ResponseEntity<InvoiceData> extractInvoices(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
+    public ResponseEntity<List<InvoiceItem>> extractInvoices(@RequestParam("files") List<MultipartFile> files) throws IOException {
         String modelId = "prebuilt-invoice";
-        InvoiceData combinedInvoiceData = new InvoiceData();
+        List<InvoiceItem> combinedInvoiceList = new ArrayList<>();
+
 
         for (MultipartFile file : files) {
             try {
@@ -63,23 +61,21 @@ public class FormRecognizer {
                 // Analyze invoice
                 SyncPoller<OperationResult, AnalyzeResult> analyzeInvoicePoller =
                         client.beginAnalyzeDocument(modelId, BinaryData.fromBytes(fileBytes));
-                AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
-                InvoiceData invoiceData = invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber);
-                combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
+                AnalyzeResult invoiceResult = analyzeInvoicePoller.getFinalResult();
+                List<InvoiceItem> invoiceItemList = invoiceService.extractInvoiceData(invoiceResult,referenceNumber);
+                combinedInvoiceList.addAll(invoiceItemList);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         }
-        InvoiceExportService invoiceExportService = new InvoiceExportService();
-        invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber);
-        return ResponseEntity.ok(combinedInvoiceData);
+        return ResponseEntity.ok(combinedInvoiceList);
     }
 
     @PostMapping("/invoices/byte")
     public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
         System.out.println("InvoicesToByte endpoint called");
         String modelId = "prebuilt-invoice";
-        InvoiceData combinedInvoiceData = new InvoiceData();
+        List<InvoiceItem> combinedInvoiceList = new ArrayList<>();
         InvoiceExportService invoiceExportService = new InvoiceExportService();
 
         for (MultipartFile file : files) {
@@ -102,45 +98,17 @@ public class FormRecognizer {
                 AnalyzeResult analyzeTaxResult = analyzeInvoicePoller.getFinalResult();
 
                 System.out.println("Analyze result: " + analyzeTaxResult);
-                InvoiceData invoiceData = invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber);
-                combinedInvoiceData = invoiceService.mergeInvoicesData(combinedInvoiceData, invoiceData);
+                combinedInvoiceList.addAll(invoiceService.extractInvoiceData(analyzeTaxResult, referenceNumber));
+
             } catch (Exception e) {
                 System.out.println("xxxx" + e.getMessage());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
             }
         }
         System.out.println("Generating Excel file");
-        byte[] byteArr = invoiceExportService.createInvoiceExcel(combinedInvoiceData, dispatchNumber);
+        byte[] byteArr = invoiceExportService.createInvoiceExcel(combinedInvoiceList, dispatchNumber);
         System.out.println("Excel file generated");
         return ResponseEntity.ok(byteArr);
-    }
-
-
-    @PostMapping("/invoice")
-    public ResponseEntity<InvoiceData> extractInvoice(@RequestParam("file") MultipartFile file) {
-        String invoiceModelId = "prebuilt-invoice";
-
-        // Extract file name
-        String fileName = file.getOriginalFilename();
-        assert fileName != null;
-        int startIndex = fileName.indexOf("[PONR-") + 6;
-        int endIndex = fileName.indexOf("]", startIndex);
-        String referenceNumber = fileName.substring(startIndex, endIndex);
-
-
-        try {
-            byte[] fileBytes = file.getBytes();
-            // Analyze invoice using the invoice model
-            SyncPoller<OperationResult, AnalyzeResult> invoicePoller =
-                    client.beginAnalyzeDocument(invoiceModelId, BinaryData.fromBytes(fileBytes));
-            AnalyzeResult invoiceResult = invoicePoller.getFinalResult();
-            InvoiceData invoiceData = invoiceService.extractInvoiceData(invoiceResult, referenceNumber);
-
-            return ResponseEntity.ok(invoiceData);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
 }

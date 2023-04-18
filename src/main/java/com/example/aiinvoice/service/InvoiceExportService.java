@@ -2,8 +2,8 @@ package com.example.aiinvoice.service;
 
 import java.io.*;
 import java.time.LocalDate;
+import java.util.List;
 
-import com.example.aiinvoice.entity.InvoiceData;
 import com.example.aiinvoice.entity.InvoiceItem;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.poi.ss.usermodel.*;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class InvoiceExportService {
 
-    public byte[] createInvoiceExcel(InvoiceData invoiceData, String dispNr) throws IOException {
+    public byte[] createInvoiceExcel(List<InvoiceItem> invoiceItemList, String dispNr) throws IOException {
         // Load the template file
         System.out.println("Entering createInvoiceExcel method");
         try {
@@ -51,11 +51,11 @@ public class InvoiceExportService {
 
             //Set invoice data in table
             int rowIndex = 17;
-            int quantityIndex = 1;
+            int rowIndex2 = 17;
             int totalQuantity = 0;
-            double subtotal = 0;
+            //double subtotal = 0;
 
-            for (InvoiceItem invoiceItem : invoiceData.getInvoiceItems()) {
+            for (InvoiceItem invoiceItem : invoiceItemList) {
                 System.out.println("Processing invoice data row: " + invoiceItem);
                 Row row = sheet.createRow(rowIndex);
                 Cell descriptionCell = row.createCell(0);
@@ -66,7 +66,6 @@ public class InvoiceExportService {
 
                 Cell quantityCell = row.createCell(1);
                 quantityCell.setCellValue(invoiceItem.getQuantity());
-                quantityIndex += invoiceItem.getQuantity();
 
                 Cell priceCell = row.createCell(2);
                 priceCell.setCellValue(invoiceItem.getPrice());
@@ -83,9 +82,10 @@ public class InvoiceExportService {
                 referenceNumberCell.setCellValue(invoiceItem.getReferenceNumber());
 
                 totalQuantity += invoiceItem.getQuantity();
-                subtotal += invoiceItem.getQuantity() * invoiceItem.getPrice();
+                //subtotal += invoiceItem.getQuantity() * invoiceItem.getPrice();
 
                 rowIndex++;
+                rowIndex2++;
             }
             CellStyle styleLine = workbook.createCellStyle();
             styleLine.setBorderBottom(BorderStyle.MEDIUM);
@@ -107,14 +107,14 @@ public class InvoiceExportService {
             total.setCellValue("Total");
             total.setCellStyle(style);
 
-            Cell subQuantityCell = subTotalRow.createCell(1);
+            Cell subQuantityCell = subTotalRow.createCell(3);
 
 
             subQuantityCell.setCellStyle(style);
             subQuantityCell.setCellValue(totalQuantity); // Use the updated totalQuantity value
             Cell subTotalCell = subTotalRow.createCell(3);
             subTotalCell.setCellStyle(style);
-            subTotalCell.setCellValue(subtotal); // Use the updated subtotal value
+            subTotalCell.setCellFormula("SUM(D17:D" + rowIndex2 + ")"); // Use the updated subtotal value
             Cell subCurrencyCell = subTotalRow.createCell(4);
             subCurrencyCell.setCellStyle(style);
             subCurrencyCell.setCellValue("EUR");
@@ -123,6 +123,8 @@ public class InvoiceExportService {
             for (int i = 1; i < 6; i++) {
                 sheet.autoSizeColumn(i);
             }
+            workbook.getCreationHelper().createFormulaEvaluator().evaluateAll();
+
 
             // Write the workbook to a byte array
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

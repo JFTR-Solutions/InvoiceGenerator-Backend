@@ -5,10 +5,10 @@ import com.azure.ai.formrecognizer.documentanalysis.models.AnalyzeResult;
 import com.azure.ai.formrecognizer.documentanalysis.models.AnalyzedDocument;
 import com.azure.ai.formrecognizer.documentanalysis.models.DocumentField;
 import com.azure.ai.formrecognizer.documentanalysis.models.DocumentFieldType;
-import com.example.aiinvoice.entity.InvoiceData;
 import com.example.aiinvoice.entity.InvoiceItem;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,12 +34,12 @@ public class InvoiceService {
         return mergedInvoiceData;
     }
 
-    public InvoiceData extractInvoiceData(AnalyzeResult analyzeResult, String referenceNumber) {
-        InvoiceData invoiceData = new InvoiceData();
+    public List<InvoiceItem> extractInvoiceData(AnalyzeResult analyzeResult, String referenceNumber) {
+        List<InvoiceItem> invoiceItemList = new ArrayList<>();
 
         List<AnalyzedDocument> analyzedDocuments = analyzeResult.getDocuments();
         if (analyzedDocuments == null) {
-            return invoiceData;
+            return invoiceItemList;
         }
 
         for (AnalyzedDocument analyzedDocument : analyzedDocuments) {
@@ -82,22 +82,15 @@ public class InvoiceService {
                                 price = Double.parseDouble(stringWithSingleDecimalPoint);
                             }
 
-                            invoiceData.addInvoiceItem(referenceNumber, description, quantity, price);
+                            invoiceItemList.add(new InvoiceItem(referenceNumber, description, quantity, price));
                         }
                     }
                 }
             }
 
-            // Extracting subtotal
-            DocumentField subtotalField = fields.get("SubTotal");
-            if (subtotalField != null) {
-                String stringWithNumbersAndCommas = subtotalField.getContent().replaceAll("[^\\d,]", "");
-                String stringWithSingleDecimalPoint = stringWithNumbersAndCommas.replaceAll("(?<=\\d),(?=\\d{3})", "").replaceFirst(",", ".");
-                invoiceData.setSubTotal(Double.parseDouble(stringWithSingleDecimalPoint));
-            }
         }
 
-        return invoiceData;
+        return invoiceItemList;
     }
 }
 
