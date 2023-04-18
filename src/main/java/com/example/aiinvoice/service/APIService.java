@@ -61,8 +61,6 @@ public class APIService {
                 System.out.println(e.getMessage());
             }
         }
-
-
         return combinedInvoiceList;
     }
 
