@@ -46,6 +46,7 @@ public class FormRecognizer {
 
     @PostMapping("/invoices")
     public ResponseEntity<List<InvoiceItem>> extractInvoices(@RequestParam("files") List<MultipartFile> files) throws IOException {
+
        /* String modelId = "prebuilt-invoice";
         List<InvoiceItem> combinedInvoiceList = new ArrayList<>();
 
@@ -76,7 +77,8 @@ public class FormRecognizer {
     @PostMapping("/invoices/byte")
     public ResponseEntity<byte[]> InvoicesToByte(@RequestParam("files") List<MultipartFile> files, @RequestParam("dispatchNumber") String dispatchNumber) throws IOException {
         System.out.println("InvoicesToByte endpoint called");
-        String modelId = "prebuilt-invoice";
+        InvoiceExportService invoiceExportService = new InvoiceExportService();
+        /*String modelId = "prebuilt-invoice";
         List<InvoiceItem> combinedInvoiceList = new ArrayList<>();
         InvoiceExportService invoiceExportService = new InvoiceExportService();
 
@@ -107,8 +109,9 @@ public class FormRecognizer {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
             }
         }
+        */
         System.out.println("Generating Excel file");
-        byte[] byteArr = invoiceExportService.createInvoiceExcel(combinedInvoiceList, dispatchNumber);
+        byte[] byteArr = invoiceExportService.createInvoiceExcel(apiService.processInvoices(files), dispatchNumber);
         System.out.println("Excel file generated");
         return ResponseEntity.ok(byteArr);
     }
