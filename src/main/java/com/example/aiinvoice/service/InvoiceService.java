@@ -57,11 +57,24 @@ public class InvoiceService {
                             }
 
                             // Extracting price
-                            DocumentField priceField = itemData.get("UnitPrice");
+                          /*  DocumentField priceField = itemData.get("UnitPrice");
                             if (priceField != null) {
                                 String stringWithNumbersAndCommas = priceField.getContent().replaceAll("[^\\d,\\.]", "");
                                 String stringWithSingleDecimalPoint = stringWithNumbersAndCommas.replaceAll("(?<=[\\d,])\\.(?=\\d{3})", "").replaceFirst("(?<=\\d),(?=\\d)", ".");
                                 price = Double.parseDouble(stringWithSingleDecimalPoint);
+                            }*/
+                            DocumentField priceField = itemData.get("UnitPrice");
+                            if (priceField != null) {
+                                String stringWithNumbersAndCommas = priceField.getContent().replaceAll("[^\\d,\\.]", "");
+                                String stringWithOnlyDecimalPoint = stringWithNumbersAndCommas.replaceAll(",", ""); // Remove all commas
+                                int decimalPointIndex = stringWithOnlyDecimalPoint.lastIndexOf('.'); // Find the last decimal point
+
+                                // Remove all other decimal points except the last one
+                                if (decimalPointIndex > 0) {
+                                    stringWithOnlyDecimalPoint = stringWithOnlyDecimalPoint.substring(0, decimalPointIndex).replaceAll("\\.", "") + stringWithOnlyDecimalPoint.substring(decimalPointIndex);
+                                }
+
+                                price = Double.parseDouble(stringWithOnlyDecimalPoint);
                             }
 
                             invoiceItemList.add(new InvoiceItem(referenceNumber, description, quantity, price));
