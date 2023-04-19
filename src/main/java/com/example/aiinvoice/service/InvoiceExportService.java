@@ -55,6 +55,11 @@ public class InvoiceExportService {
             int totalQuantity = 0;
             //double subtotal = 0;
 
+// Create a cell style with two decimal places format
+            CellStyle twoDecimalStyle = workbook.createCellStyle();
+            DataFormat dataFormat = workbook.createDataFormat();
+            twoDecimalStyle.setDataFormat(dataFormat.getFormat("0.00"));
+
             for (InvoiceItem invoiceItem : invoiceItemList) {
                 System.out.println("Processing invoice data row: " + invoiceItem);
                 Row row = sheet.createRow(rowIndex);
@@ -70,14 +75,22 @@ public class InvoiceExportService {
                 Cell priceCell = row.createCell(2);
                 priceCell.setCellValue(invoiceItem.getPrice());
 
-                double totalForRow = invoiceItem.getQuantity() * invoiceItem.getPrice();
+                Cell totalCell = row.createCell(3);
+                // Set the total cell formula to multiply the quantity and price cells
+                totalCell.setCellFormula("B" + (rowIndex + 1) + "*C" + (rowIndex + 1));
+
+                Cell currencyCell = row.createCell(4);
+                currencyCell.setCellValue("EUR");
+                Cell referenceNumberCell = row.createCell(5);
+
+/*                double totalForRow = invoiceItem.getQuantity() * invoiceItem.getPrice();
 
                 Cell totalCell = row.createCell(3);
                 totalCell.setCellValue(totalForRow);
 
                 Cell currencyCell = row.createCell(4);
                 currencyCell.setCellValue("EUR");
-                Cell referenceNumberCell = row.createCell(5);
+                Cell referenceNumberCell = row.createCell(5);*/
 
                 referenceNumberCell.setCellValue(invoiceItem.getReferenceNumber());
 
@@ -121,7 +134,9 @@ public class InvoiceExportService {
 
             // Auto-size the columns
             for (int i = 1; i < 6; i++) {
-                sheet.autoSizeColumn(i);
+                if (i != 3){
+                    sheet.autoSizeColumn(i);
+                }
             }
             workbook.getCreationHelper().createFormulaEvaluator().evaluateAll();
 
