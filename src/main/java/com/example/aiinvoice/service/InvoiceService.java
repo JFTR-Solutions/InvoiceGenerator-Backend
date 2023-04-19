@@ -47,7 +47,7 @@ public class InvoiceService {
 
                         // Check if the description contains "Discount"
                         description = description.toLowerCase();
-                        if (!description.contains("discount") && ((!description.contains("tracking"))) && (!description.contains("freight")) && (!description.contains("adminstration"))) {
+                        if (!description.contains("discount") && ((!description.contains("tracking"))) && (!description.contains("freight")) && (!description.contains("administration"))) {
                             // Extracting quantity
                             DocumentField quantityField = itemData.get("Quantity");
                             if (quantityField != null) {
