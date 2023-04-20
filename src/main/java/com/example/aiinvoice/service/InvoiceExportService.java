@@ -31,7 +31,6 @@ public class InvoiceExportService {
 
             // Get the "Invoice" sheet
             Sheet sheet = workbook.getSheetAt(0);
-            // Merge cells between C8-E13
 
             CellStyle wrapTextStyle = workbook.createCellStyle();
             wrapTextStyle.setWrapText(true);
@@ -83,19 +82,11 @@ public class InvoiceExportService {
                 currencyCell.setCellValue("EUR");
                 Cell referenceNumberCell = row.createCell(5);
 
-/*                double totalForRow = invoiceItem.getQuantity() * invoiceItem.getPrice();
 
-                Cell totalCell = row.createCell(3);
-                totalCell.setCellValue(totalForRow);
-
-                Cell currencyCell = row.createCell(4);
-                currencyCell.setCellValue("EUR");
-                Cell referenceNumberCell = row.createCell(5);*/
 
                 referenceNumberCell.setCellValue(invoiceItem.getReferenceNumber());
 
                 totalQuantity += invoiceItem.getQuantity();
-                //subtotal += invoiceItem.getQuantity() * invoiceItem.getPrice();
 
                 rowIndex++;
                 rowIndex2++;
@@ -134,7 +125,7 @@ public class InvoiceExportService {
 
             // Auto-size the columns
             for (int i = 1; i < 6; i++) {
-                if (i != 3){
+                if (i != 3) {
                     sheet.autoSizeColumn(i);
                 }
             }
@@ -152,8 +143,7 @@ public class InvoiceExportService {
             byteArrayOutputStream.close();
             return byteArray;
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         return null;

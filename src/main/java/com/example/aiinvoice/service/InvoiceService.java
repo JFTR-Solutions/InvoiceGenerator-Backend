@@ -56,13 +56,6 @@ public class InvoiceService {
                                 quantity = Double.parseDouble(stringWithNumbersAndDotOnly);
                             }
 
-                            // Extracting price
-                          /*  DocumentField priceField = itemData.get("UnitPrice");
-                            if (priceField != null) {
-                                String stringWithNumbersAndCommas = priceField.getContent().replaceAll("[^\\d,\\.]", "");
-                                String stringWithSingleDecimalPoint = stringWithNumbersAndCommas.replaceAll("(?<=[\\d,])\\.(?=\\d{3})", "").replaceFirst("(?<=\\d),(?=\\d)", ".");
-                                price = Double.parseDouble(stringWithSingleDecimalPoint);
-                            }*/
                             DocumentField priceField = itemData.get("UnitPrice");
                             if (priceField != null) {
                                 String stringWithNumbersAndCommas = priceField.getContent().replaceAll("[^\\d,\\.]", "");
